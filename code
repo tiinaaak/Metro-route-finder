@@ -1,0 +1,110 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define MAX_STATIONS 100
+
+// Structure to represent a station in the metro system
+struct Station {
+    char name;
+    int distance;
+};
+
+// Structure to represent a node in the adjacency list
+struct AdjListNode {
+    struct Station station;
+    struct AdjListNode* next;
+};
+
+// Structure to represent the adjacency list
+struct AdjList {
+    struct AdjListNode* head;
+};
+
+// Structure to represent the graph
+struct Graph {
+    int V;  // Number of vertices (stations)
+    struct AdjList* array;
+};
+
+// Function to create a new adjacency list node
+struct AdjListNode* newAdjListNode(struct Station station) {
+    struct AdjListNode* newNode = (struct AdjListNode*)malloc(sizeof(struct AdjListNode));
+    newNode->station = station;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// Function to create a graph with V vertices
+struct Graph* createGraph(int V) {
+    struct Graph* graph = (struct Graph*)malloc(sizeof(struct Graph));
+    graph->V = V;
+    graph->array = (struct AdjList*)malloc(V * sizeof(struct AdjList));
+    for (int i = 0; i < V; ++i)
+        graph->array[i].head = NULL;
+    return graph;
+}
+
+// Function to add an edge to the graph
+void addEdge(struct Graph* graph, char src, char dest, int distance) {
+    struct Station newStation;
+    newStation.name = dest;
+    newStation.distance = distance;
+    struct AdjListNode* newNode = newAdjListNode(newStation);
+    newNode->next = graph->array[src - 'A'].head;
+    graph->array[src - 'A'].head = newNode;
+}
+
+// Function to find the minimum distance station
+int minDistance(int dist[], bool sptSet[], int V) {
+    int min = INT_MAX, min_index;
+    for (int v = 0; v < V; v++)
+        if (sptSet[v] == false && dist[v] <= min)
+            min = dist[v], min_index = v;
+    return min_index;
+}
+
+// Function to find the shortest path between two stations using Dijkstra's algorithm
+int shortestPath(struct Graph* graph, char src, char dest) {
+    int V = graph->V;
+    int dist[V];
+    bool sptSet[V];
+    for (int i = 0; i < V; i++)
+        dist[i] = INT_MAX, sptSet[i] = false;
+    dist[src - 'A'] = 0;
+    for (int count = 0; count < V - 1; count++) {
+        int u = minDistance(dist, sptSet, V);
+        sptSet[u] = true;
+        struct AdjListNode* temp = graph->array[u].head;
+        while (temp != NULL) {
+            int v = temp->station.name - 'A';
+            if (!sptSet[v] && dist[u] != INT_MAX && dist[u] + temp->station.distance < dist[v])
+                dist[v] = dist[u] + temp->station.distance;
+            temp = temp->next;
+        }
+    }
+    return dist[dest - 'A'];
+}
+
+int main() {
+    struct Graph* graph = createGraph(MAX_STATIONS);
+
+    // Adding stations and connections
+    addEdge(graph, 'A', 'B', 1);
+    addEdge(graph, 'A', 'C', 2);
+    addEdge(graph, 'B', 'A', 1);
+    addEdge(graph, 'B', 'D', 3);
+    addEdge(graph, 'C', 'A', 2);
+    addEdge(graph, 'C', 'D', 1);
+    addEdge(graph, 'D', 'B', 3);
+    addEdge(graph, 'D', 'C', 1);
+
+    // Finding shortest path between stations
+    char start_station = 'A';
+    char end_station = 'D';
+    int shortest_distance = shortestPath(graph, start_station, end_station);
+
+    printf("Shortest distance between %c and %c: %d\n", start_station, end_station, shortest_distance);
+
+    return 0;
+}
