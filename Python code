@@ -1,0 +1,50 @@
+import heapq
+
+class MetroSystem:
+    def __init__(self):
+        self.graph = {}
+
+    def add_station(self, station_name, connections):
+        self.graph[station_name] = connections
+
+    def find_shortest_path(self, start_station, end_station):
+        # Initialize distances to infinity for all stations except start_station
+        distances = {station: float('inf') for station in self.graph}
+        distances[start_station] = 0
+
+        # Initialize priority queue for Dijkstra's algorithm
+        pq = [(0, start_station)]
+
+        while pq:
+            current_distance, current_station = heapq.heappop(pq)
+
+            # Check if current_station is the destination
+            if current_station == end_station:
+                return current_distance
+
+            # Check all neighbors of current_station
+            for neighbor, weight in self.graph[current_station].items():
+                distance_to_neighbor = current_distance + weight
+                # Update distance if shorter path is found
+                if distance_to_neighbor < distances[neighbor]:
+                    distances[neighbor] = distance_to_neighbor
+                    heapq.heappush(pq, (distance_to_neighbor, neighbor))
+
+        # If destination is not reachable
+        return float('inf')
+
+# Example usage
+metro = MetroSystem()
+
+# Adding stations and connections
+metro.add_station('A', {'B': 1, 'C': 2})
+metro.add_station('B', {'A': 1, 'D': 3})
+metro.add_station('C', {'A': 2, 'D': 1})
+metro.add_station('D', {'B': 3, 'C': 1})
+
+# Finding shortest path between stations
+start_station = 'A'
+end_station = 'D'
+shortest_distance = metro.find_shortest_path(start_station, end_station)
+
+print(f"Shortest distance between {start_station} and {end_station}: {shortest_distance}")
